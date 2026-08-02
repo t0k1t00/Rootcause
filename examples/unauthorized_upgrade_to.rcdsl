@@ -1,0 +1,30 @@
+// Unauthorized proxy upgrade: a call to the canonical UUPS/Transparent
+// proxy `upgradeTo(address)` function (selector 0x3659cea8) present in
+// the trace, where that call did NOT originate from the trace's own
+// transaction sender.
+//
+// Why this needs `selector`: without it, `call(kind: External)` alone
+// cannot distinguish an `upgradeTo()` invocation from any other
+// external call — every EVM `CALL` looks identical at the `CallKind`
+// level. The 4-byte selector is the only structural fact in the
+// current fact model that names *which function* a call invoked.
+//
+// Scope note: this pattern flags "upgradeTo() called by someone other
+// than the trace's own sender" as a reviewable candidate. It does NOT
+// (and structurally cannot, with today's fact model) verify that the
+// caller genuinely lacked admin/owner rights — the fact model has no
+// access-control-role fact. See the taxonomy crate's SCWE-005 mapping
+// note and the project README for the full limitation.
+pattern unauthorized_upgrade_to version 1 {
+    family: UnauthorizedUpgrade
+    severity: Critical
+    tags: ["proxy", "upgradeability", "selector", "access-control"]
+    references: ["SCWE-005"]
+
+    evidence {
+        required upgrade_call: call(kind: External, selector: "0x3659cea8")
+        optional sender_initiated_upgrade: call(kind: External, selector: "0x3659cea8", value_flow: Out)
+    }
+
+    constraint: AND(upgrade_call, NOT(sender_initiated_upgrade))
+}

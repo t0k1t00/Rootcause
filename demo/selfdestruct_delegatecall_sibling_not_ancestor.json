@@ -1,0 +1,67 @@
+{
+  "transaction": {
+    "hash": "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+    "from": "0x0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b",
+    "to": "0x0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c",
+    "value": "0x0",
+    "nonce": "0x5",
+    "gasUsed": "0xd6d8",
+    "status": "success"
+  },
+  "block": {
+    "number": "0x3a1c2",
+    "timestamp": "0x53d24402",
+    "chainId": "0x1",
+    "baseFee": null
+  },
+  "root": {
+    "kind": "call",
+    "from": "0x0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b",
+    "to": "0x0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c",
+    "value": "0x0",
+    "gasLimit": "0xd6d8",
+    "gasUsed": "0xd6d8",
+    "succeeded": true,
+    "storageChanges": [],
+    "logs": [],
+    "calls": [
+      {
+        "kind": "delegatecall",
+        "from": "0x0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c",
+        "to": "0x0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d",
+        "value": "0x0",
+        "gasLimit": "0x4e20",
+        "gasUsed": "0x4e20",
+        "succeeded": true,
+        "storageChanges": [],
+        "logs": [],
+        "calls": []
+      },
+      {
+        "kind": "call",
+        "from": "0x0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c",
+        "to": "0x0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e",
+        "value": "0x0",
+        "gasLimit": "0x7530",
+        "gasUsed": "0x7530",
+        "succeeded": true,
+        "storageChanges": [],
+        "logs": [],
+        "calls": [
+          {
+            "kind": "selfdestruct",
+            "from": "0x0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e",
+            "to": "0x0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b",
+            "value": "0x2710",
+            "gasLimit": "0x1388",
+            "gasUsed": "0x1388",
+            "succeeded": true,
+            "storageChanges": [],
+            "logs": [],
+            "calls": []
+          }
+        ]
+      }
+    ]
+  }
+}

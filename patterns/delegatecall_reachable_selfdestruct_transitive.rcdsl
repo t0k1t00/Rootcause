@@ -1,0 +1,74 @@
+// Transitive delegatecall-reachable selfdestruct: a `SELFDESTRUCT` that
+// executed successfully somewhere *beneath* a `DELEGATECALL` frame in
+// the call tree, not necessarily as its direct child.
+//
+// Why this is needed alongside `delegatecall_reachable_selfdestruct`
+// (Milestone 9): that pattern's `parent_kind: Delegate` attribute only
+// checks the SELFDESTRUCT's *immediate* parent frame. But the Parity
+// multisig library shape it models does not require the SELFDESTRUCT
+// to be called directly by the DELEGATECALL — any code path reachable
+// from inside the delegatecall's borrowed execution context still
+// executes against the caller's (proxy's) storage, and a SELFDESTRUCT
+// anywhere in that subtree still destroys the library contract whose
+// code is actually running. A realistic shape this misses:
+// `DELEGATECALL → CALL → SELFDESTRUCT` — the delegatecalled library
+// makes one more internal call (e.g. to a helper/internal function
+// exposed as its own call frame) before self-destructing.
+// `parent_kind: Delegate` reports `0 candidate match(es)` on that
+// shape, a false negative for a genuinely dangerous trace.
+//
+// How this is expressed: `call(...)` gained a new optional
+// `ancestor_kind` attribute this milestone (`crates/dsl/src/schema.rs`),
+// generalizing `parent_kind` from a one-hop parent check to a walk of
+// the *entire* ancestor chain (`fact_model::Call::parent`, followed
+// repeatedly back to the root) — see
+// `crates/matcher/src/predicate.rs`'s `has_ancestor_of_kind`.
+// `call(kind: SelfDestruct, succeeded: true, ancestor_kind: Delegate)`
+// is a single, self-contained evidence clause: it demands *some*
+// ancestor of the SELFDESTRUCT — not necessarily its direct parent —
+// be a DELEGATECALL (or its historical predecessor CALLCODE, exactly
+// as `parent_kind` already treats them, via the same
+// `call_kind_matches` helper both attributes share).
+//
+// No fact-model extension was needed: `Call::parent: Option<CallId>`
+// already existed and already supported the one-hop walk
+// `parent_kind` used; this milestone's only additive change is the DSL
+// attribute and the matcher predicate filter that walks the existing
+// field transitively instead of once.
+//
+// Relationship to the Milestone 9 pattern: this pattern strictly
+// subsumes `delegatecall_reachable_selfdestruct` in coverage (every
+// direct-child case is also an ancestor-chain case), but the two are
+// kept as separate patterns rather than one replacing the other —
+// `delegatecall_reachable_selfdestruct` remains valuable as the
+// tightest, most immediately actionable signature (the delegatecall
+// and the destructive call are adjacent, easiest for a reviewer to
+// audit), while this pattern trades a little precision of "where
+// exactly" for recall across deeper call trees. Both share the same
+// `DelegatecallReachableSelfdestruct` family and the same taxonomy
+// mappings (SWC-106 / SCWE-038) deliberately: they are the same
+// underlying finding at two different structural granularities, not
+// two different vulnerability classes.
+//
+// Scope note: identical to `delegatecall_reachable_selfdestruct` —
+// this pattern cannot verify whether the delegatecall itself was
+// authorized, or whether the library's own SELFDESTRUCT function
+// lacked an access modifier in source. It surfaces the structural
+// shape a reviewer needs to check, not a proof that access control was
+// missing.
+pattern delegatecall_reachable_selfdestruct_transitive version 1 {
+    family: DelegatecallReachableSelfdestruct
+    severity: Critical
+    tags: ["selfdestruct", "delegatecall", "access-control", "irrevocable", "library", "transitive"]
+    references: ["SWC-106", "SCWE-038"]
+
+    evidence {
+        required destruct_beneath_delegatecall: call(
+            kind: SelfDestruct,
+            succeeded: true,
+            ancestor_kind: Delegate
+        )
+    }
+
+    constraint: destruct_beneath_delegatecall
+}

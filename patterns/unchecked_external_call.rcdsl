@@ -1,0 +1,47 @@
+// Unchecked external call: a low-level call (`call`/`delegatecall`/
+// `staticcall`-shaped) that reverted, while the enclosing transaction
+// as a whole still completed with `status: success`.
+//
+// Why this pair of facts is the right structural signature: the EVM
+// does not automatically propagate a `CALL`'s failure to its caller —
+// a failed low-level call simply returns `false`; unless the caller
+// explicitly checks that return value and reverts, execution
+// continues and the transaction can still succeed overall. So a call
+// that failed (`fact_model::Call::succeeded == false`) sitting inside
+// a transaction that nonetheless reports `TxStatus::Success` is
+// exactly what "the return value was never checked" looks like from
+// the outside of a single-trace fact model — if the caller *had*
+// checked it and reverted, the transaction's own status would be
+// `Reverted`, not `Success` (see `demo/checked_call_reverts.json` for
+// that contrasting shape).
+//
+// Both facts already existed in `fact-model` before this pattern
+// (`Call::succeeded`, `Transaction`'s status) and both predicates
+// already existed in the DSL/matcher (`call`, `transaction`) — the
+// only change this pattern required was exposing the pre-existing
+// `Call::succeeded` field as a `call(succeeded: ...)` filter attribute
+// (`crates/dsl/src/schema.rs`, `crates/matcher/src/predicate.rs`),
+// exactly the minimal extension the top-level README's exploit-corpus
+// table proposed for this family.
+//
+// Scope note: this pattern flags "a call failed inside an otherwise-
+// successful transaction" as a reviewable candidate. It cannot (and
+// does not claim to) distinguish a genuinely unchecked low-level call
+// from one whose failure was deliberately tolerated by design (e.g. a
+// best-effort notification call the contract intentionally ignores) —
+// the fact model has no "was this failure handled" flag, only whether
+// the call itself succeeded. See the taxonomy crate's SCWE-048 /
+// SWC-104 mapping notes for the same caveat in context.
+pattern unchecked_external_call version 1 {
+    family: UncheckedExternalCall
+    severity: High
+    tags: ["unchecked-call", "return-value", "error-handling"]
+    references: ["SWC-104", "SCWE-048"]
+
+    evidence {
+        required failed_call: call(kind: External, succeeded: false)
+        required tx_succeeded: transaction(status: Success)
+    }
+
+    constraint: AND(failed_call, tx_succeeded)
+}

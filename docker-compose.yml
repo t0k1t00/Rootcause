@@ -1,0 +1,21 @@
+# Example docker-compose usage for `rootcause`.
+#
+# This is a convenience example, not a long-running service: `rootcause`
+# is a one-shot CLI, so `docker compose run` (not `up`) is the intended
+# way to invoke it.
+#
+#   docker compose build
+#   docker compose run --rm rootcause analyze /data/trace.json --patterns /patterns
+#
+# Replace `./demo` below with the directory containing your own trace
+# file(s) if you don't want to analyze the bundled demo trace.
+
+services:
+  rootcause:
+    build: .
+    image: rootcause
+    volumes:
+      - ./demo:/data:ro
+    # No `command:` default — pass the subcommand and flags via
+    # `docker compose run --rm rootcause <args>`, exactly as you would
+    # with `docker run --rm rootcause <args>`.

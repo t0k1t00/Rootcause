@@ -1,0 +1,14 @@
+edition = "2021"
+max_width = 100
+use_small_heuristics = "Default"
+reorder_imports = true
+reorder_modules = true
+newline_style = "Unix"
+
+# `imports_granularity` and `group_imports` are deliberately NOT set here:
+# both are nightly-only rustfmt options (verified against the workspace's
+# pinned stable 1.75.0 toolchain — see rust-toolchain.toml). Setting them
+# produces a non-fatal warning on `cargo fmt` and is silently a no-op, which
+# is worse than not setting them at all: a config option that looks
+# authoritative but does nothing is a maintenance trap. If the project
+# later pins a nightly toolchain (or these stabilize), revisit via ADR.

@@ -1,0 +1,19 @@
+# Build artifacts and VCS metadata never needed inside the build context.
+target/
+.git/
+.github/
+
+# Editor/OS cruft.
+*.swp
+*.orig
+*.rej
+.DS_Store
+
+# Packaged release archives, if built locally before a `docker build`.
+*.zip
+*.tar.gz
+
+# Generated converter output (see demo/converted/.gitkeep) — regenerated
+# on demand, never needed to build or run the image.
+demo/converted/*
+!demo/converted/.gitkeep

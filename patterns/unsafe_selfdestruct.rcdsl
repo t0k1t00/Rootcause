@@ -1,0 +1,48 @@
+// Unsafe selfdestruct: a `SELFDESTRUCT` opcode that executed
+// successfully within the trace.
+//
+// Why this is the right structural signature, and what it cannot
+// claim: `SELFDESTRUCT` irrevocably removes a contract's code and
+// sweeps its entire remaining balance to a beneficiary address
+// (`fact_model::CallKind::Selfdestruct`, `Call.to`). It is one of the
+// few EVM operations whose mere occurrence in an observed trace is
+// itself significant to a reviewer, independent of who triggered it —
+// unlike a plain value-transferring `CALL`, there is no benign,
+// routine reason for it to appear at all in most contracts' normal
+// operation. SWC-106 / SCWE-050 describe the underlying weakness as
+// this instruction being reachable *without* proper access control;
+// this pattern cannot verify authorization directly (see the scope
+// note below), but a `SELFDESTRUCT` that reached execution and
+// succeeded is exactly the kind of candidate a reviewer needs
+// surfaced to check whether that access control existed.
+//
+// Both the fact (`fact_model::CallKind::Selfdestruct`) and the
+// predicate support (`call(kind: SelfDestruct, ...)`) are new in this
+// pattern's own milestone — see `crates/fact-model/src/call.rs`,
+// `crates/dsl/src/schema.rs`, and `crates/matcher/src/predicate.rs`'s
+// `call_kind_matches`. No other file needed to change: `succeeded`
+// already existed on `call(...)` (added for `unchecked_external_call`),
+// and grounding verifies this evidence the same generic way it
+// verifies every other `call(...)` clause.
+//
+// Scope note: this pattern flags "a SELFDESTRUCT call succeeded" as a
+// reviewable candidate. It cannot (and does not claim to) determine
+// whether the call was actually authorized — the fact model has no
+// access-control/ownership fact (see the top-level README's "Access-
+// control failure" row in the "Exploit families evaluated but not
+// added" table for the same, still-unresolved gap). A contract whose
+// `SELFDESTRUCT` is correctly gated behind an `onlyOwner`-style check,
+// destroyed by its legitimate owner, will still match; this is a
+// candidate for review, not a proof of missing access control.
+pattern unsafe_selfdestruct version 1 {
+    family: UnsafeSelfdestruct
+    severity: Critical
+    tags: ["selfdestruct", "access-control", "irrevocable"]
+    references: ["SWC-106", "SCWE-050"]
+
+    evidence {
+        required destruct_call: call(kind: SelfDestruct, succeeded: true)
+    }
+
+    constraint: destruct_call
+}

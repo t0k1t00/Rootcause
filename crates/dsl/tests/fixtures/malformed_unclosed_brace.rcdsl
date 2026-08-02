@@ -1,0 +1,6 @@
+pattern broken_pattern version 1 {
+    family: Reentrancy
+    severity: High
+
+    evidence {
+        required a: call(kind: External)

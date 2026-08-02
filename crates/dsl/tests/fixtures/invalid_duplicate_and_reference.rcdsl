@@ -1,0 +1,11 @@
+pattern bad_pattern version 1 {
+    family: Reentrancy
+    severity: High
+
+    evidence {
+        required a: call(kind: External)
+        required a: call(kind: Internal)
+    }
+
+    constraint: AND(a, ghost_evidence)
+}

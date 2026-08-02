@@ -1,0 +1,56 @@
+// Proxy upgrade with a verified storage effect — demonstrates
+// `same_call:` (Milestone 8).
+//
+// `unauthorized_upgrade_to` (the original example in this directory)
+// flags any call matching the `upgradeTo(address)` selector, with no
+// structural confirmation that the call actually changed the proxy's
+// implementation storage — a call that merely happens to share the
+// selector's first four bytes (e.g. calldata coincidence, or a
+// decoy/no-op function with the same signature hash) would still
+// match. This pattern closes that gap: it requires the *same* call
+// that matched `upgradeTo()` to also be the call that produced the
+// storage write to slot 0 (the conventional unstructured-storage
+// implementation slot — see `patterns/delegatecall_storage_collision`
+// for the same slot convention).
+//
+// Before `same_call:`, the only available correlation was `sequence:`,
+// which only checks trace order — it cannot distinguish "this call
+// wrote slot 0" from "some unrelated call wrote slot 0 shortly after".
+// `same_call:` closes that gap by requiring both evidence clauses'
+// bindings to resolve to the identical `CallId`, independently
+// re-verified by the `grounding` crate rather than trusted from
+// `matcher`'s structural match (see `crates/grounding/src/engine.rs`,
+// `verify_same_call`).
+//
+// Files:
+// - `positive_same_call_upgrade.json` — the `upgradeTo()` call's own
+//   frame contains the slot-0 storage write. Matches.
+// - `negative_same_call_upgrade.json` — an `upgradeTo()` call exists,
+//   and a slot-0 write exists elsewhere in the trace, but they belong
+//   to two different calls. Without `same_call:` this would still
+//   satisfy `sequence:`-based ordering; with it, the pattern correctly
+//   does not match.
+//
+// Scope note: as with `unauthorized_upgrade_to`, this still cannot
+// verify caller authorization — the fact model has no access-control
+// fact. It narrows "selector looks like upgradeTo()" down to "this
+// specific call both matched the selector and mutated the
+// implementation slot itself", which is a meaningfully tighter
+// candidate, not a full authorization proof.
+pattern proxy_upgrade_self_write version 1 {
+    family: UnauthorizedUpgrade
+    severity: Critical
+    tags: ["proxy", "upgradeability", "selector", "same-call"]
+    references: ["SCWE-005"]
+
+    evidence {
+        required upgrade_call: call(kind: External, selector: "0x3659cea8")
+        required implementation_slot_write: storage(
+            changed: true,
+            slot: "0x0000000000000000000000000000000000000000000000000000000000000000"
+        )
+    }
+
+    constraint: AND(upgrade_call, implementation_slot_write)
+    same_call: [upgrade_call, implementation_slot_write]
+}

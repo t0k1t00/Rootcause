@@ -1,0 +1,67 @@
+// Delegatecall-reachable selfdestruct: a `SELFDESTRUCT` that executed
+// successfully as the *direct child* of a `DELEGATECALL` frame — the
+// structural shape of the 2017 Parity multisig wallet library incident,
+// where a `SELFDESTRUCT` reachable only via `DELEGATECALL` from proxy
+// wallets destroyed the shared library contract itself and froze every
+// wallet depending on it.
+//
+// Why this is a distinct, higher-value signature than plain
+// `unsafe_selfdestruct`: `DELEGATECALL` executes the callee's code
+// against the *caller's* own storage and context
+// (`fact_model::CallKind::executes_in_caller_context`) — but the
+// `SELFDESTRUCT` opcode itself always destroys whichever contract's
+// code is *currently executing*, i.e. the delegatecall's callee (the
+// "library"), not the caller ("proxy") whose storage was being
+// borrowed. A `SELFDESTRUCT` reached this way is therefore uniquely
+// dangerous: destroying the library contract breaks *every* proxy that
+// still delegates to it, not just the single caller in this one trace.
+// A `SELFDESTRUCT` invoked directly (not through a delegatecall) only
+// ever destroys the contract an attacker was already calling into
+// directly — a strictly narrower blast radius. This pattern exists to
+// surface that specific, worse shape as its own reviewable finding,
+// alongside (not instead of) `unsafe_selfdestruct`.
+//
+// How this is expressed: `call(...)` gained a new optional
+// `parent_kind` attribute this milestone (`crates/dsl/src/schema.rs`),
+// mirroring `storage(call_kind: ...)`'s existing "dereference to the
+// producing/invoking call, not mere trace-order adjacency" idiom —
+// applied here to `fact_model::Call::parent`, the one-hop call-tree
+// edge every `Call` already carries, instead of
+// `StorageChange::call_id`. `call(kind: SelfDestruct, succeeded: true,
+// parent_kind: Delegate)` is a single, self-contained evidence clause:
+// it demands the SELFDESTRUCT's own direct parent frame — not merely
+// some delegatecall elsewhere in the trace — be a DELEGATECALL (or its
+// historical predecessor CALLCODE, which `call_kind_matches` already
+// treats identically to a plain DELEGATECALL, per
+// `CallKind::executes_in_caller_context`).
+//
+// No fact-model extension was needed: `Call::parent: Option<CallId>`
+// already existed (every call tree needs it for depth/ancestry), so
+// this milestone's only additive change was the DSL attribute and the
+// matcher predicate filter that reads it — see
+// `crates/matcher/src/predicate.rs`'s `evaluate_call` and its
+// `call_predicate_parent_kind_*` tests.
+//
+// Scope note: like `unsafe_selfdestruct`, this pattern cannot verify
+// whether the delegatecall itself was authorized, or whether the
+// library's own SELFDESTRUCT function had (and lacked) an access
+// modifier in source — the fact model has no access-control fact (see
+// the top-level README's "Access-control failure" row). It flags the
+// structural shape a reviewer needs surfaced, not a proof of missing
+// access control.
+pattern delegatecall_reachable_selfdestruct version 1 {
+    family: DelegatecallReachableSelfdestruct
+    severity: Critical
+    tags: ["selfdestruct", "delegatecall", "access-control", "irrevocable", "library"]
+    references: ["SWC-106", "SCWE-038"]
+
+    evidence {
+        required destruct_via_delegatecall: call(
+            kind: SelfDestruct,
+            succeeded: true,
+            parent_kind: Delegate
+        )
+    }
+
+    constraint: destruct_via_delegatecall
+}

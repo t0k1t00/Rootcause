@@ -1,0 +1,48 @@
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": {
+    "type": "CALL",
+    "from": "0x790ba84d8d1d604f617c0def35e339422ba9a026",
+    "to": "0xe2e52c2d0d64209b8dd1854371a4c673c13448f0",
+    "value": "0x2386f26fc10000",
+    "gas": "0x2558d",
+    "gasUsed": "0x1afca",
+    "input": "0x0871e971",
+    "output": "0x",
+    "calls": [
+      {
+        "type": "DELEGATECALL",
+        "from": "0xe2e52c2d0d64209b8dd1854371a4c673c13448f0",
+        "to": "0xd08fa8fa2056997bd2ca3ba689c63ddf54f3874f",
+        "gas": "0x23020",
+        "gasUsed": "0x1931b",
+        "input": "0x0871e971",
+        "output": "0x",
+        "calls": [
+          {
+            "type": "CALL",
+            "from": "0xe2e52c2d0d64209b8dd1854371a4c673c13448f0",
+            "to": "0x715fc3a1422de7ae2ea483d1da8415e8dd45bad3",
+            "value": "0x0",
+            "gas": "0x14256",
+            "gasUsed": "0xaa1f",
+            "input": "0x33d6247d",
+            "output": "0x",
+            "calls": [
+              {
+                "type": "DELEGATECALL",
+                "from": "0x715fc3a1422de7ae2ea483d1da8415e8dd45bad3",
+                "to": "0x11dec2c21999c5283db6aa794359fe0a94207dac",
+                "gas": "0x12151",
+                "gasUsed": "0x8d8b",
+                "input": "0x33d6247d",
+                "output": "0x"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,15 @@
+pattern donation_attack version 1 {
+    family: OracleManipulation
+    severity: High
+    tags: ["oracle", "donation", "price-manipulation"]
+    references: ["SCWE-042"]
+
+    evidence {
+        required donation_transfer: token_transfer(direction: In, unexpected: true, token: "0xdac17f958d2ee523a2206206994597c13d831ec")
+        required price_read: storage(changed: true, role: PriceOracle)
+        optional attacker_flash_loan: value_flow(direction: In, min: 1000000)
+    }
+
+    constraint: AND(donation_transfer, price_read, NOT(attacker_flash_loan))
+    sequence: [donation_transfer, price_read] within: 30
+}

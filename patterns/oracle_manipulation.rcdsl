@@ -1,0 +1,14 @@
+pattern oracle_manipulation version 1 {
+    family: OracleManipulation
+    severity: High
+    tags: ["oracle", "price-manipulation", "flash-loan"]
+    references: ["SCWE-028"]
+
+    evidence {
+        required donation_transfer: token_transfer(direction: In, unexpected: true)
+        required price_read: storage(changed: true, role: PriceOracle)
+    }
+
+    constraint: AND(donation_transfer, price_read)
+    sequence: [donation_transfer, price_read] within: 1
+}

@@ -1,0 +1,62 @@
+{
+  "transaction": {
+    "hash": "0xcccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+    "from": "0x4444444444444444444444444444444444444444",
+    "to": "0x5555555555555555555555555555555555555555",
+    "value": "0x0",
+    "nonce": "0x8",
+    "gasUsed": "0x30d40",
+    "status": "success"
+  },
+  "block": {
+    "number": "0x3a1b3",
+    "timestamp": "0x53d243e1",
+    "chainId": "0x1",
+    "baseFee": null
+  },
+  "root": {
+    "kind": "call",
+    "from": "0x4444444444444444444444444444444444444444",
+    "to": "0x5555555555555555555555555555555555555555",
+    "value": "0x0",
+    "gasLimit": "0x30d40",
+    "gasUsed": "0x30d40",
+    "succeeded": true,
+    "storageChanges": [
+      {
+        "contract": "0x5555555555555555555555555555555555555555",
+        "slot": "0x0000000000000000000000000000000000000000000000000000000000000001",
+        "before": "0x0000000000000000000000000000000000000000000000008ac7230489e80000",
+        "after": "0x0000000000000000000000000000000000000000000000000000000000000000"
+      }
+    ],
+    "logs": [],
+    "calls": [
+      {
+        "kind": "call",
+        "from": "0x5555555555555555555555555555555555555555",
+        "to": "0x4444444444444444444444444444444444444444",
+        "value": "0x8ac7230489e80000",
+        "gasLimit": "0x2bf20",
+        "gasUsed": "0x1c800",
+        "succeeded": true,
+        "storageChanges": [],
+        "logs": [],
+        "calls": [
+          {
+            "kind": "call",
+            "from": "0x4444444444444444444444444444444444444444",
+            "to": "0x5555555555555555555555555555555555555555",
+            "value": "0x0",
+            "gasLimit": "0x2710",
+            "gasUsed": "0x5208",
+            "succeeded": true,
+            "storageChanges": [],
+            "logs": [],
+            "calls": []
+          }
+        ]
+      }
+    ]
+  }
+}

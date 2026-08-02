@@ -1,0 +1,101 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/fact-model",
+    "crates/ingestion",
+    "crates/dsl",
+    "crates/matcher",
+    "crates/grounding",
+    "crates/taxonomy",
+    "crates/benchmark-harness",
+    "crates/converters",
+    "crates/cli",
+    "integration-tests",
+]
+
+# Crates that are implemented but not yet ready for public consumption are
+# still full workspace members; there is no "default-members" carve-out here
+# because Task 1 requires every crate to compile and test independently from
+# day one, not to be scaffolded and skipped.
+
+[workspace.package]
+edition = "2021"
+rust-version = "1.75"
+license = "Apache-2.0"
+authors = ["Root Cause Project"]
+repository = "https://github.com/rootcause-project/rootcause"
+publish = false
+
+# ---------------------------------------------------------------------------
+# Shared dependency versions.
+#
+# Every crate that needs one of these declares `foo = { workspace = true }`
+# rather than pinning its own version. This is the mechanism that prevents
+# two crates from silently drifting onto incompatible versions of the same
+# dependency, which is a common source of duplicate-symbol / diamond-
+# dependency build breakage in larger workspaces.
+# ---------------------------------------------------------------------------
+[workspace.dependencies]
+thiserror = "1.0"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+#
+# Pinned to the `1.4.0` exact version (not a "1.4" range) because proptest
+# 1.5+ transitively pulls a `getrandom`/`rand` major version that requires
+# Cargo's `edition2024` feature, which is unstable on this workspace's
+# pinned toolchain (see rust-toolchain.toml, 1.75.0). `Cargo.lock` is
+# committed for exactly this reason: to make this pin reproducible for CI
+# and other contributors rather than relying on manifest ranges alone.
+proptest = "=1.4.0"
+
+# ---------------------------------------------------------------------------
+# Workspace-wide lints.
+#
+# Rust 1.74+ supports `[workspace.lints]`, letting every member crate opt in
+# with `[lints] workspace = true` instead of repeating lint configuration.
+# The policy below encodes this project's stated engineering constraints:
+# no unwrap() in library code, prefer explicit error types, exhaustive
+# enums, no silent truncation, etc. Lints are deliberately set at `warn`
+# rather than `deny` at the workspace level; CI promotes them to hard
+# failures via `cargo clippy -- -D warnings` (see .github/workflows/ci.yml)
+# so that local development iteration isn't blocked mid-edit, while CI
+# still enforces a zero-warning bar.
+# ---------------------------------------------------------------------------
+[workspace.lints.rust]
+unsafe_code = "deny"
+missing_docs = "warn"
+unused_must_use = "deny"
+
+[workspace.lints.clippy]
+# Deny-by-default panics-in-library-code lints. These directly encode the
+# project rule "no unwrap() in library code."
+unwrap_used = "warn"
+expect_used = "warn"
+panic = "warn"
+todo = "deny"
+unimplemented = "deny"
+
+# Correctness / maintainability defaults appropriate for a project that
+# will accumulate many small pattern/predicate implementations over time.
+all = { level = "warn", priority = -1 }
+pedantic = { level = "warn", priority = -1 }
+nursery = { level = "warn", priority = -1 }
+
+# Individual pedantic/nursery lints that are net-negative noise for this
+# codebase are explicitly allowed back, rather than disabling the whole
+# group silently — each has a stated reason so the exception is auditable.
+module_name_repetitions = "allow" # crate::fact_model::FactModelError is clearer than the alternative
+must_use_candidate = "allow" # too aggressive for internal-only helper fns at this stage
+
+[profile.release]
+# Determinism and debuggability are explicit project invariants (Architecture
+# doc: "deterministic engine"). LTO + a single codegen unit reduce the chance
+# of codegen-order-dependent floating point or iteration-order surprises in
+# release builds and produce more predictable benchmark-harness timings.
+lto = true
+codegen-units = 1
+panic = "unwind" # keep unwind (not abort) so integration tests can catch panics in-process
+
+[profile.dev]
+# Fast local iteration; no special requirements beyond defaults.
+opt-level = 0

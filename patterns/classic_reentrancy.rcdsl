@@ -1,0 +1,14 @@
+pattern classic_reentrancy version 1 {
+    family: Reentrancy
+    severity: Critical
+    tags: ["reentrancy", "callback", "check-effects-interactions"]
+    references: ["SWC-107", "SCWE-041"]
+
+    evidence {
+        required vulnerable_call: call(kind: External, reentrant: true, value_flow: Out)
+        required state_write_after_call: storage(changed: true)
+    }
+
+    constraint: AND(vulnerable_call, state_write_after_call)
+    sequence: [vulnerable_call, state_write_after_call] within: 1
+}

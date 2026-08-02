@@ -1,0 +1,31 @@
+[package]
+name = "cli"
+description = "Command-line entry point for Root Cause."
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+publish.workspace = true
+
+[[bin]]
+name = "rootcause"
+path = "src/main.rs"
+
+[lints]
+workspace = true
+
+[dependencies]
+fact-model = { path = "../fact-model" }
+ingestion = { path = "../ingestion" }
+dsl = { path = "../dsl" }
+matcher = { path = "../matcher" }
+grounding = { path = "../grounding" }
+taxonomy = { path = "../taxonomy" }
+benchmark-harness = { path = "../benchmark-harness" }
+thiserror = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+clap = { version = "=4.5.20", features = ["derive"] }
+clap_complete = "=4.5.20"

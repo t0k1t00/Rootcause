@@ -1,0 +1,32 @@
+[package]
+name = "integration-tests"
+description = "Cross-crate integration tests for the Root Cause workspace."
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+publish.workspace = true
+
+[lints]
+workspace = true
+
+[dev-dependencies]
+fact-model = { path = "../crates/fact-model" }
+ingestion = { path = "../crates/ingestion" }
+dsl = { path = "../crates/dsl" }
+matcher = { path = "../crates/matcher" }
+grounding = { path = "../crates/grounding" }
+taxonomy = { path = "../crates/taxonomy" }
+benchmark-harness = { path = "../crates/benchmark-harness" }
+
+# NOTE: `cli` is intentionally *not* listed as a dependency here. It is a
+# `[[bin]]`-only crate (no `[lib]` target — see crates/cli/Cargo.toml), and
+# Cargo cannot resolve a bin-only crate as a normal package dependency
+# ("ignoring invalid dependency `cli` which is missing a lib target").
+# Consequently `CARGO_BIN_EXE_rootcause` is not available to this test
+# binary via the usual dependency mechanism either. The smoke test instead
+# locates the compiled `rootcause` binary relative to the current
+# executable's path (see tests/workspace_smoke.rs) rather than depending on
+# an env var Cargo does not set for this configuration.

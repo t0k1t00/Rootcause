@@ -1,0 +1,29 @@
+{
+  "transaction": {
+    "hash": "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "from": "0x1111111111111111111111111111111111111111",
+    "to": "0x2222222222222222222222222222222222222222",
+    "value": "0x0",
+    "nonce": "0x0",
+    "gasUsed": "0x5208",
+    "status": "success"
+  },
+  "block": {
+    "number": "0x1",
+    "timestamp": "0x1",
+    "chainId": "0x1",
+    "baseFee": null
+  },
+  "root": {
+    "kind": "call",
+    "from": "0x1111111111111111111111111111111111111111",
+    "to": "0x2222222222222222222222222222222222222222",
+    "value": "0x0",
+    "gasLimit": "0x186a0",
+    "gasUsed": "0x5208",
+    "succeeded": true,
+    "storageChanges": [],
+    "logs": [],
+    "calls": []
+  }
+}

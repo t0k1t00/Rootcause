@@ -1,0 +1,42 @@
+{
+  "transaction": {
+    "hash": "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+    "from": "0x0909090909090909090909090909090909090909",
+    "to": "0x0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a",
+    "value": "0x0",
+    "nonce": "0x5",
+    "gasUsed": "0x7530",
+    "status": "success"
+  },
+  "block": {
+    "number": "0x3a1b7",
+    "timestamp": "0x53d243e7",
+    "chainId": "0x1",
+    "baseFee": null
+  },
+  "root": {
+    "kind": "call",
+    "from": "0x0909090909090909090909090909090909090909",
+    "to": "0x0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a",
+    "value": "0x0",
+    "gasLimit": "0x7530",
+    "gasUsed": "0x7530",
+    "succeeded": true,
+    "storageChanges": [],
+    "logs": [],
+    "calls": [
+      {
+        "kind": "selfdestruct",
+        "from": "0x0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a",
+        "to": "0x0909090909090909090909090909090909090909",
+        "value": "0x2710",
+        "gasLimit": "0x1388",
+        "gasUsed": "0x1388",
+        "succeeded": true,
+        "storageChanges": [],
+        "logs": [],
+        "calls": []
+      }
+    ]
+  }
+}

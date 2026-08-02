@@ -1,0 +1,56 @@
+// Spoofed transfer event: a log carrying the standard ERC-20/ERC-721
+// `Transfer(address,address,uint256)` event's topic0
+// (`0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef`)
+// that is not actually shaped like a decodable transfer.
+//
+// Why this pair of facts is the right structural signature: an
+// off-chain observer (an exchange's deposit listener, a wallet, a
+// naive indexer) that recognizes a "token deposit" by filtering logs
+// on topic0 alone — a common shortcut, since topic0 is cheap to
+// filter on at the RPC layer (`eth_getLogs`'s own `topics[0]` filter)
+// — can be fooled by any contract that emits a log with that exact
+// topic0 but without the two indexed addresses and 32-byte amount a
+// real `Transfer` carries. This is the real, publicly documented "fake
+// deposit event" technique used against exchanges that trust logs
+// without validating their full shape. `ingestion`'s own
+// `try_decode_token_transfer` (`crates/ingestion/src/normalize.rs`)
+// already refuses to produce a `fact_model::TokenTransfer` for a log
+// that doesn't have exactly 3 topics and 32 bytes of data — this
+// pattern's only new capability is letting a DSL clause ask about that
+// refusal directly, via the new `log(topic0: ..., decoded: ...)`
+// predicate (Milestone 12; see `crates/dsl/src/schema.rs`).
+//
+// Both `topic0` and `decoded` are fully, structurally checkable from
+// facts `fact-model` already records (`LogEvent.topics`, and whether
+// any `TokenTransfer.log_id` cites this log) — neither is an invented
+// or interpreted fact the way `storage(role: ...)` or
+// `token_transfer(unexpected: ...)` are. `topic0` is a raw byte
+// comparison against a publicly computable `keccak256` hash, exactly
+// the same idiom `call(selector: ...)` already established (Milestone
+// 7) for function selectors, just applied to the analogous event-side
+// concept.
+//
+// Scope note: this pattern flags "a log claims to be a Transfer event
+// but isn't shaped like one" as a reviewable candidate. It cannot (and
+// does not claim to) determine whether the log's emitter intended to
+// deceive an off-chain observer, whether any observer was actually
+// fooled, or whether the log's true purpose was legitimate (e.g. a
+// custom, non-standard event that happens to share this exact topic0
+// hash by construction is vanishingly unlikely but not structurally
+// impossible to rule out) — the fact model has no "author's intent"
+// fact, only the log's own recorded shape.
+pattern spoofed_transfer_event version 1 {
+    family: SpoofedTransferEvent
+    severity: High
+    tags: ["event-spoofing", "fake-deposit", "log-injection"]
+    references: ["SCWE-063"]
+
+    evidence {
+        required fake_transfer: log(
+            topic0: "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef",
+            decoded: false
+        )
+    }
+
+    constraint: fake_transfer
+}

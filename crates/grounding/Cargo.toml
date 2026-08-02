@@ -1,0 +1,22 @@
+[package]
+name = "grounding"
+description = "Evidence grounding and abstention logic for matcher findings."
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+publish.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+dsl = { path = "../dsl" }
+fact-model = { path = "../fact-model" }
+matcher = { path = "../matcher" }
+thiserror = { workspace = true }
+
+[dev-dependencies]
+proptest = { workspace = true }

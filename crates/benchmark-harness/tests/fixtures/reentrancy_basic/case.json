@@ -1,0 +1,14 @@
+{
+  "id": "reentrancy_basic",
+  "description": "A single, non-reentrant top-level call with no state writes.",
+  "trace_file": "trace.dat",
+  "provenance_label": "fixture:reentrancy_basic",
+  "patterns": [
+    {
+      "source": "pattern classic_reentrancy version 1 { family: Reentrancy severity: Critical evidence { required vulnerable_call: call(kind: External, reentrant: true) } constraint: vulnerable_call }"
+    }
+  ],
+  "expected": [
+    { "pattern_id": "classic_reentrancy", "outcome": "no-match" }
+  ]
+}

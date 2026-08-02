@@ -1,0 +1,61 @@
+{
+  "transaction": {
+    "hash": "0x1111111111111111111111111111111111111111111111111111111111111111",
+    "from": "0x0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a",
+    "to": "0x0909090909090909090909090909090909090909",
+    "value": "0x0",
+    "nonce": "0x4",
+    "gasUsed": "0x1e848",
+    "status": "success"
+  },
+  "block": {
+    "number": "0x3a1b9",
+    "timestamp": "0x53d243e9",
+    "chainId": "0x1",
+    "baseFee": null
+  },
+  "root": {
+    "kind": "call",
+    "from": "0x0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a",
+    "to": "0x0909090909090909090909090909090909090909",
+    "value": "0x0",
+    "gasLimit": "0x1e848",
+    "gasUsed": "0x1e848",
+    "succeeded": true,
+    "storageChanges": [],
+    "logs": [],
+    "calls": [
+      {
+        "kind": "delegatecall",
+        "from": "0x0909090909090909090909090909090909090909",
+        "to": "0x0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b",
+        "value": "0x0",
+        "gasLimit": "0xea60",
+        "gasUsed": "0xea60",
+        "succeeded": true,
+        "storageChanges": [],
+        "logs": [],
+        "calls": []
+      },
+      {
+        "kind": "call",
+        "from": "0x0909090909090909090909090909090909090909",
+        "to": "0x0909090909090909090909090909090909090909",
+        "value": "0x0",
+        "gasLimit": "0xea60",
+        "gasUsed": "0xea60",
+        "succeeded": true,
+        "storageChanges": [
+          {
+            "contract": "0x0909090909090909090909090909090909090909",
+            "slot": "0x0000000000000000000000000000000000000000000000000000000000000000",
+            "before": "0x0000000000000000000000000a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a",
+            "after": "0x0000000000000000000000000a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a1a"
+          }
+        ],
+        "logs": [],
+        "calls": []
+      }
+    ]
+  }
+}

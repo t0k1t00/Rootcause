@@ -1,0 +1,27 @@
+[package]
+name = "benchmark-harness"
+description = "Evaluation harness computing precision/recall/abstention-rate metrics against the benchmark corpus."
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+publish.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+fact-model = { path = "../fact-model" }
+ingestion = { path = "../ingestion" }
+dsl = { path = "../dsl" }
+matcher = { path = "../matcher" }
+grounding = { path = "../grounding" }
+taxonomy = { path = "../taxonomy" }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+
+[dev-dependencies]
+proptest = { workspace = true }

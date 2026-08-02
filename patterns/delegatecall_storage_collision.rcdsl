@@ -1,0 +1,54 @@
+// Delegatecall storage collision: a `DELEGATECALL` (or its historical
+// predecessor `CALLCODE`) whose own execution frame produced a storage
+// write landing on slot 0 — the conventional first storage slot, most
+// often holding a proxy's own critical state (an `owner`/`admin`
+// address, or, in naive pre-EIP-1967 proxies, the implementation
+// address itself).
+//
+// Why this is the right structural signature: `DELEGATECALL` executes
+// the callee's code but reads and writes the *caller's* own storage
+// (`fact_model::CallKind::executes_in_caller_context`). If the callee
+// ("implementation") contract's own storage layout was not written
+// with the caller ("proxy") contract's layout in mind — the caller and
+// callee simply disagree about what lives at a given slot — the
+// callee's code can silently overwrite the caller's slot 0 as a side
+// effect of running unrelated logic. This is the exact mechanism
+// SWC-112 ("Delegatecall to Untrusted Callee") and SCWE-150 ("Storage
+// Slot Collision When Upgrading Implementation") describe.
+//
+// v2 vs v1: v1 (see earlier milestone reports) expressed this as two
+// independent evidence clauses — `call(kind: Delegate)` and
+// `storage(...)` — correlated only by `sequence:`'s non-decreasing
+// trace-order check. That correlation is loose: a plain `CALL` that
+// happens to write slot 0 immediately after an unrelated delegatecall
+// would also satisfy it. v2 uses `storage(..., call_kind: Delegate)`
+// instead — a single, self-contained evidence clause that dereferences
+// the write's own `StorageChange::call_id` back to the exact call that
+// produced it and checks *that* call's kind, closing the false-positive
+// gap v1's scope note flagged. See `crates/matcher/src/predicate.rs`'s
+// `evaluate_storage` for the implementation, and
+// `storage_predicate_call_kind_rejects_a_merely_adjacent_call` for the
+// test proving the distinction.
+//
+// Scope note (still applies in v2): this pattern still cannot know
+// whether slot 0 is actually sensitive in the target proxy's real
+// layout — there is no per-contract storage-layout schema. A proxy
+// that deliberately, safely uses slot 0 for something the
+// implementation also legitimately touches would still match; this is
+// a reviewable candidate, not a proof of an exploitable collision.
+pattern delegatecall_storage_collision version 2 {
+    family: DelegatecallStorageCollision
+    severity: Critical
+    tags: ["delegatecall", "storage-collision", "proxy", "upgradeability"]
+    references: ["SWC-112", "SCWE-150"]
+
+    evidence {
+        required slot_zero_write: storage(
+            changed: true,
+            slot: "0x0000000000000000000000000000000000000000000000000000000000000000",
+            call_kind: Delegate
+        )
+    }
+
+    constraint: slot_zero_write
+}

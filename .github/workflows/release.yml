@@ -1,0 +1,158 @@
+name: Release
+
+# Builds and publishes `rootcause` binaries for Linux, macOS (x86_64 and
+# arm64), and Windows, plus a Docker image, whenever a `v*` tag is
+# pushed. This is intentionally a plain, auditable build matrix rather
+# than a third-party release-automation tool (e.g. cargo-dist) — the
+# workspace is small and this keeps the entire release process readable
+# in one file, with no additional tool to pin, configure, or trust.
+#
+# To cut a release:
+#   git tag v0.1.0
+#   git push origin v0.1.0
+# This workflow does the rest; nothing needs to be run locally.
+
+on:
+  push:
+    tags:
+      - "v*"
+
+env:
+  CARGO_TERM_COLOR: always
+  BIN_NAME: rootcause
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  build:
+    name: Build (${{ matrix.target }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            archive_ext: tar.gz
+          - os: macos-latest
+            target: x86_64-apple-darwin
+            archive_ext: tar.gz
+          - os: macos-latest
+            target: aarch64-apple-darwin
+            archive_ext: tar.gz
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            archive_ext: zip
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install pinned toolchain
+        run: rustup show
+
+      - name: Add target
+        run: rustup target add ${{ matrix.target }}
+
+      - name: Build
+        run: cargo build --release --locked -p cli --target ${{ matrix.target }}
+
+      - name: Package (tar.gz)
+        if: matrix.archive_ext == 'tar.gz'
+        shell: bash
+        run: |
+          set -euo pipefail
+          stage="${BIN_NAME}-${{ matrix.target }}"
+          mkdir -p "$stage"
+          cp "target/${{ matrix.target }}/release/${BIN_NAME}" "$stage/"
+          cp README.md LICENSE CHANGELOG.md "$stage/"
+          cp -r patterns "$stage/patterns"
+          tar czf "${stage}.tar.gz" "$stage"
+          shasum -a 256 "${stage}.tar.gz" > "${stage}.tar.gz.sha256"
+
+      - name: Package (zip)
+        if: matrix.archive_ext == 'zip'
+        shell: bash
+        run: |
+          set -euo pipefail
+          stage="${BIN_NAME}-${{ matrix.target }}"
+          mkdir -p "$stage"
+          cp "target/${{ matrix.target }}/release/${BIN_NAME}.exe" "$stage/"
+          cp README.md LICENSE CHANGELOG.md "$stage/"
+          cp -r patterns "$stage/patterns"
+          7z a "${stage}.zip" "$stage"
+          sha256sum "${stage}.zip" > "${stage}.zip.sha256" 2>/dev/null || \
+            certutil -hashfile "${stage}.zip" SHA256 > "${stage}.zip.sha256"
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.BIN_NAME }}-${{ matrix.target }}
+          path: |
+            ${{ env.BIN_NAME }}-${{ matrix.target }}.tar.gz
+            ${{ env.BIN_NAME }}-${{ matrix.target }}.tar.gz.sha256
+            ${{ env.BIN_NAME }}-${{ matrix.target }}.zip
+            ${{ env.BIN_NAME }}-${{ matrix.target }}.zip.sha256
+          if-no-files-found: ignore
+
+  docker:
+    name: Build and push Docker image
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Determine image tags
+        id: meta
+        run: |
+          tag="${GITHUB_REF_NAME}"
+          echo "tags=ghcr.io/${{ github.repository }}:${tag},ghcr.io/${{ github.repository }}:latest" >> "$GITHUB_OUTPUT"
+
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+
+  release:
+    name: Publish GitHub Release
+    needs: [build, docker]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download all build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+
+      - name: Flatten artifact directories
+        run: |
+          mkdir -p release-files
+          find dist -type f \( -name '*.tar.gz' -o -name '*.zip' -o -name '*.sha256' \) \
+            -exec cp {} release-files/ \;
+          ls -la release-files
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: release-files/*
+          generate_release_notes: true
+          body: |
+            See `CHANGELOG.md` for what's in this release.
+
+            Docker image: `ghcr.io/${{ github.repository }}:${{ github.ref_name }}`
+
+            Every archive below includes the `rootcause` binary, the
+            bundled pattern library, `LICENSE`, `README.md`, and a
+            `.sha256` checksum file — verify with
+            `sha256sum -c <file>.sha256` (Linux/macOS) or
+            `certutil -hashfile <file> SHA256` (Windows) before running
+            an unfamiliar binary.
