@@ -67,10 +67,14 @@ jobs:
         - name: Install pinned toolchain
           run: rustup show
         - uses: taiki-e/install-action@cargo-llvm-cov
-        - name: Build rootcause binary (needed by converters' integration test)
-          run: cargo build --workspace --target-dir target/llvm-cov-target
+        - name: Build rootcause binary under coverage instrumentation
+          run: |
+            source <(cargo llvm-cov show-env --export-prefix)
+            cargo build --workspace
         - name: Generate coverage
-          run: cargo llvm-cov --workspace --lcov --output-path lcov.info
+          run: |
+            source <(cargo llvm-cov show-env --export-prefix)
+            cargo llvm-cov --workspace --no-clean --lcov --output-path lcov.info
         - uses: actions/upload-artifact@v4
           with:
             name: coverage-report
