@@ -59,18 +59,16 @@ jobs:
       - uses: EmbarkStudios/cargo-deny-action@v2.1.1
 
   coverage:
-    name: cargo llvm-cov (informational)
-    runs-on: ubuntu-latest
-    continue-on-error: true
-    steps:
-      - uses: actions/checkout@v4
-      - name: Install pinned toolchain
-        run: rustup show
-      - uses: taiki-e/install-action@cargo-llvm-cov
-      - name: Build rootcause binary (needed by converters' integration test)
-        run: cargo build --workspace --target-dir target/llvm-cov-target
-      - run: cargo llvm-cov --workspace --lcov --output-path lcov.info
-      - uses: actions/upload-artifact@v4
-        with:
-          name: coverage-report
-          path: lcov.info
+      name: cargo llvm-cov (informational)
+      runs-on: ubuntu-latest
+      continue-on-error: true
+      steps:
+        - uses: actions/checkout@v4
+        - name: Install pinned toolchain
+          run: rustup show
+        - uses: taiki-e/install-action@cargo-llvm-cov
+        - run: cargo llvm-cov --workspace --all-targets --lcov --output-path lcov.info
+        - uses: actions/upload-artifact@v4
+          with:
+            name: coverage-report
+            path: lcov.info
