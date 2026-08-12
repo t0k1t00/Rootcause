@@ -10,6 +10,7 @@
 //! negative demo trace, if one is available. No new pipeline logic is
 //! introduced here.
 
+use std::fmt::Write as _;
 use std::path::{Path, PathBuf};
 
 use dsl::ir::CompiledPattern;
@@ -307,12 +308,12 @@ fn trace_check(
 
 fn render(pattern_path: &Path, checks: &[CheckResult]) -> String {
     let mut out = String::new();
-    out.push_str(&format!("Validating {}\n", pattern_path.display()));
+    let _ = writeln!(out, "Validating {}", pattern_path.display());
     for check in checks {
-        out.push_str(&format!("  {}\n", check.render()));
+        let _ = writeln!(out, "  {}", check.render());
     }
     let passed = checks.iter().filter(|c| c.passed).count();
-    out.push_str(&format!("\n{passed}/{} checks passed\n", checks.len()));
+    let _ = writeln!(out, "\n{passed}/{} checks passed", checks.len());
     out
 }
 

@@ -101,12 +101,12 @@ pub fn parse_hex_bytes(field: &'static str, raw: &str) -> Result<Vec<u8>, Ingest
     let mut bytes = Vec::with_capacity(digits.len() / 2);
     let digit_bytes = digits.as_bytes();
     for chunk in digit_bytes.chunks_exact(2) {
-        let hi = hex_digit(chunk[0]).ok_or(IngestionError::MalformedField {
+        let hi = hex_digit(chunk[0]).ok_or_else(|| IngestionError::MalformedField {
             field,
             value: raw.to_string(),
             reason: "invalid hex digit",
         })?;
-        let lo = hex_digit(chunk[1]).ok_or(IngestionError::MalformedField {
+        let lo = hex_digit(chunk[1]).ok_or_else(|| IngestionError::MalformedField {
             field,
             value: raw.to_string(),
             reason: "invalid hex digit",

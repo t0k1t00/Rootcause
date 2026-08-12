@@ -86,6 +86,11 @@ nursery = { level = "warn", priority = -1 }
 # group silently — each has a stated reason so the exception is auditable.
 module_name_repetitions = "allow" # crate::fact_model::FactModelError is clearer than the alternative
 must_use_candidate = "allow" # too aggressive for internal-only helper fns at this stage
+too_long_first_doc_paragraph = "allow" # this codebase's doc comments are deliberately dense with
+# design rationale (see e.g. every crate's top-level module docs); splitting
+# the first paragraph to satisfy this lint would mean rewriting technical
+# content authored by the crate's maintainer, which is a judgment call this
+# lint shouldn't force on every future contributor
 
 [profile.release]
 # Determinism and debuggability are explicit project invariants (Architecture

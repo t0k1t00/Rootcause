@@ -24,6 +24,8 @@
 //! `pattern ... { ... }` body (re-printed by this module) — see that
 //! module's `split_leading_comments`.
 
+use std::fmt::Write as _;
+
 use dsl::ast::{
     AttrValue, BoolExpr, EvidenceDecl, MetadataEntry, MetadataValue, PatternAst, Predicate,
     Requiredness, SameCallConstraint, SequenceConstraint,
@@ -37,21 +39,22 @@ const INDENT: &str = "    ";
 #[must_use]
 pub fn format_pattern_body(pattern: &PatternAst) -> String {
     let mut out = String::new();
-    out.push_str(&format!(
-        "pattern {} version {} {{\n",
+    let _ = writeln!(
+        out,
+        "pattern {} version {} {{",
         pattern.id.value, pattern.version.value
-    ));
+    );
 
     for entry in &pattern.metadata {
         out.push_str(&format_metadata_entry(entry));
     }
 
     out.push('\n');
-    out.push_str(&format!("{INDENT}evidence {{\n"));
+    let _ = writeln!(out, "{INDENT}evidence {{");
     for decl in &pattern.evidence {
         out.push_str(&format_evidence_decl(decl));
     }
-    out.push_str(&format!("{INDENT}}}\n"));
+    let _ = writeln!(out, "{INDENT}}}");
 
     if let Some(same_call) = &pattern.same_call {
         out.push('\n');
@@ -65,10 +68,7 @@ pub fn format_pattern_body(pattern: &PatternAst) -> String {
 
     if let Some(constraint) = &pattern.constraint {
         out.push('\n');
-        out.push_str(&format!(
-            "{INDENT}constraint: {}\n",
-            format_bool_expr(constraint)
-        ));
+        let _ = writeln!(out, "{INDENT}constraint: {}", format_bool_expr(constraint));
     }
 
     out.push_str("}\n");
@@ -127,9 +127,9 @@ fn format_predicate(predicate: &Predicate) -> String {
     let mut out = format!("{}(\n", predicate.kind.value);
     for (i, attr) in attrs.iter().enumerate() {
         let sep = if i + 1 == attrs.len() { "" } else { "," };
-        out.push_str(&format!("{INDENT}{INDENT}{INDENT}{attr}{sep}\n"));
+        let _ = writeln!(out, "{INDENT}{INDENT}{INDENT}{attr}{sep}");
     }
-    out.push_str(&format!("{INDENT}{INDENT})"));
+    let _ = write!(out, "{INDENT}{INDENT})");
     out
 }
 

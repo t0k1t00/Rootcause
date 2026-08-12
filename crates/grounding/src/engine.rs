@@ -615,7 +615,7 @@ fn explain(
 
 /// Ground `candidate` against `trace` using the default verifier
 /// registry — a convenience wrapper around
-/// [`GroundingEngine::new`]`.`[`ground`](GroundingEngine::ground). Build
+/// <code>[GroundingEngine::new].[ground](GroundingEngine::ground)</code>. Build
 /// a [`GroundingEngine`] directly (and reuse it) when grounding many
 /// candidates.
 ///

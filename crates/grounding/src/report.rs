@@ -133,7 +133,7 @@ pub struct EvidenceVerification {
     /// The independently-verified outcome.
     pub outcome: EvidenceOutcome,
     /// Every fact this verification step cites — plural, per the Task's
-    /// own "referenced FactRef values" phrasing, though every built-in
+    /// own "referenced `FactRef` values" phrasing, though every built-in
     /// verifier currently cites at most one (see
     /// `crate::verifier::VerifierOutcome::fact`); kept as a `Vec` so a
     /// future verifier needing to cite several corroborating facts for

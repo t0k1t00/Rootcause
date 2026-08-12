@@ -8,6 +8,8 @@
 //! — except free-text fields (case description, error detail), which
 //! are escaped per RFC 4180 by `escape`.
 
+use std::fmt::Write as _;
+
 use crate::report::BenchmarkReport;
 
 const HEADER: &str = "case_id,description,pattern_id,pattern_version,candidate_count,expected,actual,matches_expectation,ingestion_ms,matching_ms,grounding_ms,taxonomy_ms,error";
@@ -38,8 +40,9 @@ pub fn to_csv(report: &BenchmarkReport) -> Result<String, crate::error::Benchmar
 
     for case in &report.case_results {
         if case.pattern_results.is_empty() {
-            out.push_str(&format!(
-                "{},{},,,,,,,{:.3},{:.3},{:.3},{:.3},{}\n",
+            let _ = writeln!(
+                out,
+                "{},{},,,,,,,{:.3},{:.3},{:.3},{:.3},{}",
                 escape(&case.case_id.0),
                 escape(&case.description),
                 case.timings.ingestion.as_secs_f64() * 1000.0,
@@ -47,13 +50,14 @@ pub fn to_csv(report: &BenchmarkReport) -> Result<String, crate::error::Benchmar
                 case.timings.grounding.as_secs_f64() * 1000.0,
                 case.timings.taxonomy.as_secs_f64() * 1000.0,
                 escape(case.error.as_deref().unwrap_or("")),
-            ));
+            );
             continue;
         }
 
         for pr in &case.pattern_results {
-            out.push_str(&format!(
-                "{},{},{},{},{},{},{},{},{:.3},{:.3},{:.3},{:.3},{}\n",
+            let _ = writeln!(
+                out,
+                "{},{},{},{},{},{},{},{},{:.3},{:.3},{:.3},{:.3},{}",
                 escape(&case.case_id.0),
                 escape(&case.description),
                 escape(&pr.pattern_id.0),
@@ -68,7 +72,7 @@ pub fn to_csv(report: &BenchmarkReport) -> Result<String, crate::error::Benchmar
                 case.timings.grounding.as_secs_f64() * 1000.0,
                 case.timings.taxonomy.as_secs_f64() * 1000.0,
                 escape(case.error.as_deref().unwrap_or("")),
-            ));
+            );
         }
     }
 

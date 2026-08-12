@@ -48,7 +48,7 @@ fn build_pattern_source(names: &[String], kind: &str, with_sequence: bool) -> St
         String::new()
     };
     format!(
-        r#"
+        r"
         pattern generated_pattern version 1 {{
             family: Reentrancy
             severity: High
@@ -59,7 +59,7 @@ fn build_pattern_source(names: &[String], kind: &str, with_sequence: bool) -> St
             constraint: {constraint}
             {sequence}
         }}
-        "#
+        "
     )
 }
 
@@ -101,13 +101,13 @@ proptest! {
     #[test]
     fn every_known_severity_is_accepted(severity in severity()) {
         let source = format!(
-            r#"
+            r"
             pattern p version 1 {{
                 family: Reentrancy
                 severity: {severity}
                 evidence {{ required a: call(kind: External) }}
             }}
-            "#
+            "
         );
         let ast = dsl::parse_pattern(&source).unwrap();
         let diags = dsl::validate_pattern(&ast);

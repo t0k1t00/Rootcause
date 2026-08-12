@@ -95,6 +95,10 @@ pub const DSL_VERSION_USED: &str = dsl::CRATE_VERSION;
 pub const GROUNDING_VERSION_USED: &str = grounding::CRATE_VERSION;
 
 #[cfg(test)]
+#[allow(
+    clippy::const_is_empty,
+    reason = "these consts are env!(\"CARGO_PKG_VERSION\") — clippy can't see through env!, and can never actually be empty; the asserts are intentional canaries that env! resolved and cross-crate version re-exports link"
+)]
 mod tests {
     use super::*;
 

@@ -129,7 +129,7 @@ pub struct BenchmarkArgs {
 /// Arguments for `rootcause new-pattern`.
 #[derive(Debug, Parser)]
 pub struct NewPatternArgs {
-    /// The new pattern's identifier, e.g. `my_new_pattern` (snake_case;
+    /// The new pattern's identifier, e.g. `my_new_pattern` (`snake_case`;
     /// becomes the `.rcdsl` filename and the DSL `pattern` name).
     pub name: String,
 

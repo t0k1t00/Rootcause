@@ -1,14 +1,11 @@
 name: CI
-
 on:
   push:
     branches: [main]
   pull_request:
     branches: [main]
-
 env:
   CARGO_TERM_COLOR: always
-
 jobs:
   fmt:
     name: cargo fmt --check
@@ -18,7 +15,6 @@ jobs:
       - name: Install pinned toolchain
         run: rustup show
       - run: cargo fmt --all --check
-
   clippy:
     name: cargo clippy
     runs-on: ubuntu-latest
@@ -27,7 +23,6 @@ jobs:
       - name: Install pinned toolchain
         run: rustup show
       - run: cargo clippy --workspace --all-targets -- -D warnings
-
   test:
     name: cargo test
     runs-on: ubuntu-latest
@@ -37,7 +32,6 @@ jobs:
         run: rustup show
       - run: cargo build --workspace
       - run: cargo test --workspace
-
   doc:
     name: cargo doc
     runs-on: ubuntu-latest
@@ -48,7 +42,6 @@ jobs:
       - run: cargo doc --workspace --no-deps
         env:
           RUSTDOCFLAGS: "-D warnings"
-
   deny:
     name: cargo deny check
     runs-on: ubuntu-latest
@@ -57,19 +50,21 @@ jobs:
       - name: Install pinned toolchain
         run: rustup show
       - uses: EmbarkStudios/cargo-deny-action@v2.1.1
-
   coverage:
-    name: cargo llvm-cov (informational)
-    runs-on: ubuntu-latest
-    continue-on-error: true
-    steps:
-      - uses: actions/checkout@v4
-      - name: Install pinned toolchain
-        run: rustup show
-      - uses: taiki-e/install-action@cargo-llvm-cov
-      - name: Generate coverage
-        run: cargo llvm-cov --workspace --lcov --output-path lcov.info
-      - uses: actions/upload-artifact@v4
-        with:
-          name: coverage-report
-          path: lcov.info
+      name: cargo llvm-cov (informational)
+      runs-on: ubuntu-latest
+      continue-on-error: true
+      steps:
+        - uses: actions/checkout@v4
+        - name: Install pinned toolchain
+          run: rustup show
+        - uses: taiki-e/install-action@cargo-llvm-cov
+        - name: Generate coverage
+          run: |
+            cargo llvm-cov --workspace --lcov --output-path lcov.info -- \
+              --skip geth_calltracer_sample_converts_and_analyzes_with_no_false_positive \
+              --skip erigon_calltracer_sample_converts_and_analyzes_with_no_false_positive
+        - uses: actions/upload-artifact@v4
+          with:
+            name: coverage-report
+            path: lcov.info

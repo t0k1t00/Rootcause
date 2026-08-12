@@ -10,6 +10,7 @@
 //! (`rootcause validate-pattern`) works against files this command just
 //! produced.
 
+use std::fmt::Write as _;
 use std::path::{Path, PathBuf};
 
 use crate::error::CliError;
@@ -81,27 +82,32 @@ pub fn run(name: &str, dir: &Path, family: Option<&str>, force: bool) -> Result<
     }
 
     let mut out = String::new();
-    out.push_str(&format!("Scaffolded pattern `{name}`:\n"));
+    let _ = writeln!(out, "Scaffolded pattern `{name}`:");
     for file in &files {
-        out.push_str(&format!("  {}\n", file.path.display()));
+        let _ = writeln!(out, "  {}", file.path.display());
     }
     out.push('\n');
     out.push_str("Next steps:\n");
-    out.push_str(&format!(
-        "  1. Edit patterns/{name}.rcdsl — write the evidence and constraint your pattern needs.\n"
-    ));
-    out.push_str(&format!(
-        "  2. Edit demo/{name}_positive.json / demo/{name}_negative.json — build a real positive and negative trace (see docs/PATTERN_AUTHORING_GUIDE.md step 6).\n"
-    ));
-    out.push_str(&format!(
-        "  3. Map `{family}` to a taxonomy in crates/taxonomy/src/scwe.rs (and swc.rs if it genuinely fits) — see docs/taxonomy-todo/{name}.md.\n"
-    ));
-    out.push_str(&format!(
-        "  4. Run `rootcause validate-pattern patterns/{name}.rcdsl` until every check passes.\n"
-    ));
-    out.push_str(&format!(
-        "  5. Run `rootcause format-pattern patterns/{name}.rcdsl --write` before committing.\n"
-    ));
+    let _ = writeln!(
+        out,
+        "  1. Edit patterns/{name}.rcdsl — write the evidence and constraint your pattern needs."
+    );
+    let _ = writeln!(
+        out,
+        "  2. Edit demo/{name}_positive.json / demo/{name}_negative.json — build a real positive and negative trace (see docs/PATTERN_AUTHORING_GUIDE.md step 6)."
+    );
+    let _ = writeln!(
+        out,
+        "  3. Map `{family}` to a taxonomy in crates/taxonomy/src/scwe.rs (and swc.rs if it genuinely fits) — see docs/taxonomy-todo/{name}.md."
+    );
+    let _ = writeln!(
+        out,
+        "  4. Run `rootcause validate-pattern patterns/{name}.rcdsl` until every check passes."
+    );
+    let _ = writeln!(
+        out,
+        "  5. Run `rootcause format-pattern patterns/{name}.rcdsl --write` before committing."
+    );
 
     Ok(out)
 }
@@ -289,7 +295,7 @@ cargo run -p cli -- analyze demo/{name}_negative.json --patterns patterns/
 
 fn taxonomy_note_template(name: &str, family: &str) -> String {
     format!(
-        r#"# Taxonomy mapping TODO: `{name}`
+        r"# Taxonomy mapping TODO: `{name}`
 
 `family: {family}` is not yet mapped to any taxonomy. Delete this file
 once mapped.
@@ -304,7 +310,7 @@ once mapped.
    files.
 4. Run `rootcause validate-pattern patterns/{name}.rcdsl` — the taxonomy
    check will pass once this mapping exists.
-"#
+"
     )
 }
 

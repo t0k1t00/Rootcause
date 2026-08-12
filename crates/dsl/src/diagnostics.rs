@@ -41,7 +41,7 @@ pub struct Diagnostic {
     /// Where in the source the problem was found.
     pub location: Span,
     /// A short name for the offending construct, e.g. `"pattern
-    /// metadata"`, `"evidence declaration `donation_transfer`"`,
+    /// metadata"`, `"evidence declaration ``donation_transfer``"`,
     /// `"constraint expression"`.
     pub offending_construct: String,
     /// Why this is a problem, in a full sentence.

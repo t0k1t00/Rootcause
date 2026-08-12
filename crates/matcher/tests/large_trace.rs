@@ -149,10 +149,20 @@ fn deep_call_chain_matches_correctly_and_quickly() {
     // flaking on slow CI runners while still catching an accidental
     // quadratic-or-worse regression (which would take vastly longer at
     // this size).
-    assert!(
-        elapsed < Duration::from_secs(5),
-        "matching 1000 calls took {elapsed:?}, expected well under 5s"
-    );
+    //
+    // Skipped under coverage instrumentation: `cargo llvm-cov` builds
+    // and runs tests with `-C instrument-coverage`, which adds a
+    // counter increment to every basic block and can push even an
+    // O(n) scan close to (or past) a wall-clock bound tuned for a
+    // native build. `cargo-llvm-cov` sets `LLVM_PROFILE_FILE` for
+    // every test process it runs, so it's a reliable signal we're
+    // under instrumentation rather than a real perf regression.
+    if std::env::var_os("LLVM_PROFILE_FILE").is_none() {
+        assert!(
+            elapsed < Duration::from_secs(5),
+            "matching 1000 calls took {elapsed:?}, expected well under 5s"
+        );
+    }
 }
 
 #[test]

@@ -13,6 +13,7 @@
 //! failure reading `patterns_dir` itself.
 
 use std::collections::BTreeMap;
+use std::fmt::Write as _;
 use std::path::Path;
 
 use crate::error::CliError;
@@ -203,19 +204,20 @@ fn scan_pattern_file(
 
 fn render(patterns_dir: &Path, checked: usize, total: usize, issues: &[Issue]) -> String {
     let mut out = String::new();
-    out.push_str(&format!(
-        "Scanning {} ({total} pattern file(s), {checked} compiled successfully)\n",
+    let _ = writeln!(
+        out,
+        "Scanning {} ({total} pattern file(s), {checked} compiled successfully)",
         patterns_dir.display()
-    ));
+    );
     if issues.is_empty() {
         out.push_str("\n\u{2713} no issues found\n");
         return out;
     }
     out.push('\n');
     for issue in issues {
-        out.push_str(&format!("\u{2717} {}: {}\n", issue.file, issue.message));
+        let _ = writeln!(out, "\u{2717} {}: {}", issue.file, issue.message);
     }
-    out.push_str(&format!("\n{} issue(s) found\n", issues.len()));
+    let _ = writeln!(out, "\n{} issue(s) found", issues.len());
     out
 }
 
