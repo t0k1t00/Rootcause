@@ -59,11 +59,9 @@ jobs:
         - name: Install pinned toolchain
           run: rustup show
         - uses: taiki-e/install-action@cargo-llvm-cov
-        - name: Generate coverage
-          run: |
-            cargo llvm-cov --workspace --lcov --output-path lcov.info -- \
-              --skip geth_calltracer_sample_converts_and_analyzes_with_no_false_positive \
-              --skip erigon_calltracer_sample_converts_and_analyzes_with_no_false_positive
+        - name: Build workspace binaries into cargo-llvm-cov's target dir
+          run: cargo build --workspace --target-dir target/llvm-cov-target
+        - run: cargo llvm-cov --workspace --lcov --output-path lcov.info
         - uses: actions/upload-artifact@v4
           with:
             name: coverage-report
