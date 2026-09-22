@@ -1,4 +1,4 @@
-<parameter name="CodeContent"># Root Cause
+# Root Cause
 
 > **Deterministic, evidence-grounded EVM exploit pattern detection — no ML, no confidence scores, no guessing.**
 
@@ -6,7 +6,6 @@ Root Cause takes a raw EVM transaction trace and a library of pattern definition
 
 [![CI](https://github.com/t0k1t00/Rootcause/actions/workflows/ci.yml/badge.svg)](https://github.com/t0k1t00/Rootcause/actions/workflows/ci.yml)
 [![Rust 1.87](https://img.shields.io/badge/rust-1.87.0-orange.svg)](https://www.rust-lang.org)
-[![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 
 ---
 
@@ -25,7 +24,6 @@ Root Cause takes a raw EVM transaction trace and a library of pattern definition
 - [CI Pipeline](#ci-pipeline)
 - [Docker](#docker)
 - [Troubleshooting](#troubleshooting)
-- [Contributing](#contributing)
 
 ---
 
@@ -114,7 +112,7 @@ flowchart TD
     style CLI fill:#1a1a2e,color:#fff,stroke:#888
 ```
 
-### Pipeline detail
+### Pipeline sequence
 
 ```mermaid
 sequenceDiagram
@@ -199,7 +197,7 @@ rootcause/
 │   ├── cli/                 `rootcause` binary — all user-facing subcommands
 │   └── converters/          `geth-convert` binary — Geth/Erigon trace adapter
 ├── integration-tests/       Cross-crate binary-level integration tests
-├── patterns/                Shipped detection pattern library (.rcdsl)
+├── patterns/                Detection pattern library (.rcdsl)
 ├── demo/                    Curated exploit trace corpus (JSON)
 │   └── samples/             Real callTracer responses for converter tests
 ├── examples/                Annotated example patterns with walkthrough
@@ -208,49 +206,28 @@ rootcause/
 │   ├── spec/                Architecture + engineering specification
 │   └── adr/                 Architecture Decision Records
 ├── .github/workflows/
-│   ├── ci.yml               fmt / clippy / test / doc / deny / coverage
-│   └── release.yml          Cross-platform binaries + Docker + GitHub Release
+│   └── ci.yml               fmt / clippy / test / doc / deny / coverage
 ├── Dockerfile
 ├── docker-compose.yml
-├── rust-toolchain.toml      Pinned to 1.87.0
-└── deny.toml                cargo-deny: license + advisory + duplicate checks
+└── rust-toolchain.toml      Pinned to 1.87.0
 ```
 
 ---
 
 ## Installation
 
-### Option 1 — Prebuilt binary (recommended)
-
-Download from [GitHub Releases](https://github.com/t0k1t00/Rootcause/releases). Archives are available for Linux (`x86_64-unknown-linux-gnu`), macOS (`x86_64` and `aarch64-apple-darwin`), and Windows (`x86_64-pc-windows-msvc`), each bundled with the pattern library and a `.sha256` checksum.
-
-```sh
-# Verify before running (Linux/macOS)
-sha256sum -c rootcause-x86_64-unknown-linux-gnu.tar.gz.sha256
-
-# Windows
-certutil -hashfile rootcause-x86_64-pc-windows-msvc.zip SHA256
-```
-
-### Option 2 — `cargo install`
+### Build from source
 
 ```sh
 git clone https://github.com/t0k1t00/Rootcause
 cd Rootcause
-cargo install --path crates/cli --locked
-rootcause --version
-```
-
-### Option 3 — Build in place
-
-```sh
 cargo build --release -p cli
 ./target/release/rootcause --version
 ```
 
-> **Note:** Options 2 and 3 require the pinned Rust 1.87.0 toolchain. `rustup` reads `rust-toolchain.toml` automatically once you `cd` into the repo. No other runtime dependencies — no database, no network access, no external services.
+Requires the pinned Rust 1.87.0 toolchain. `rustup` reads `rust-toolchain.toml` automatically when you `cd` into the repo — no other runtime dependencies.
 
-### Option 4 — Docker
+### Docker
 
 ```sh
 docker build -t rootcause .
@@ -258,16 +235,13 @@ docker run --rm -v "$(pwd)/demo:/data:ro" rootcause \
     analyze /data/dao.json --patterns /patterns
 ```
 
-See [Docker](#docker) for full details and `docker-compose.yml` usage.
-
 ### Shell completions
 
 ```sh
-rootcause completions bash   > /etc/bash_completion.d/rootcause
-rootcause completions zsh    > "${fpath[1]}/_rootcause"
-rootcause completions fish   > ~/.config/fish/completions/rootcause.fish
-rootcause completions powershell >> $PROFILE
-# also: elvish
+rootcause completions bash       # bash
+rootcause completions zsh        # zsh
+rootcause completions fish       # fish
+rootcause completions powershell # PowerShell
 ```
 
 ---
@@ -275,8 +249,6 @@ rootcause completions powershell >> $PROFILE
 ## Quick Start
 
 ```sh
-# Clone and analyze the bundled reentrancy example
-git clone https://github.com/t0k1t00/Rootcause && cd Rootcause
 cargo run -p cli -- analyze demo/dao.json --patterns patterns/
 ```
 
@@ -297,16 +269,16 @@ Ran 7 pattern(s), found 1 candidate match(es), 1 finding(s) after grounding:
     - SWC  SWC-107:  Reentrancy
 ```
 
-`GROUNDED` means both evidence clauses were **independently re-derived from the trace's actual call structure** — not just matched once and trusted.
+`GROUNDED` means both evidence clauses were **independently re-derived from the actual call structure** — not just matched once and trusted.
 
 ```sh
 # JSON output
 cargo run -p cli -- analyze demo/dao.json --patterns patterns/ --format json
 
-# Markdown (suitable for GitHub issues / reports)
+# Markdown
 cargo run -p cli -- analyze demo/dao.json --patterns patterns/ --format markdown
 
-# Run the benchmark harness
+# Benchmark harness
 cargo run -p cli -- benchmark \
     crates/benchmark-harness/tests/fixtures/reentrancy_basic/case.json \
     --format markdown
@@ -322,20 +294,18 @@ Root Cause ships a pattern SDK — four subcommands that streamline writing and 
 # 1. Scaffold: starter .rcdsl, positive/negative demo traces, README template
 rootcause new-pattern my_pattern --family MyExploitFamily
 
-# 2. Edit patterns/my_pattern.rcdsl and demo/{positive,negative}.json
+# 2. Edit patterns/my_pattern.rcdsl and the demo trace pair
 #    (see docs/PATTERN_AUTHORING_GUIDE.md)
 
 # 3. Validate: syntax → metadata → compilation → taxonomy → demo-trace checks
 rootcause validate-pattern patterns/my_pattern.rcdsl
 
-# 4. Format canonically before committing
+# 4. Format canonically
 rootcause format-pattern patterns/my_pattern.rcdsl --write
 
-# 5. Scan the whole library for cross-file issues before opening a PR
+# 5. Scan the whole library for cross-file issues
 rootcause doctor
 ```
-
-`format-pattern --check` and `doctor` are CI-safe: both exit non-zero without writing anything when they find a problem, identical to `cargo fmt --check`.
 
 See [`docs/PATTERN_AUTHORING_GUIDE.md`](docs/PATTERN_AUTHORING_GUIDE.md) for the full step-by-step guide.
 
@@ -357,12 +327,12 @@ pattern classic_reentrancy version 1 {
             value_out: true
         )
         required post_write: storage(
-            changed: true,
+            changed:   true,
             call_kind: External
         )
     }
 
-    sequence: [reentrant_call, post_write]
+    sequence:   [reentrant_call, post_write]
     constraint: reentrant_call
 }
 ```
@@ -384,14 +354,14 @@ pattern classic_reentrancy version 1 {
 |---------|---------|
 | `sequence: [a, b, ...]` | Evidence clauses must appear in non-decreasing trace order |
 | `same_call: [a, b, ...]` | All listed clauses must be produced by the **identical** call |
-| `constraint: expr` | Logical predicate over evidence names (default: conjunction) |
+| `constraint: expr` | Logical predicate over evidence names |
 
 ### Grounding outcomes
 
 | Status | Meaning |
 |--------|---------|
 | `Grounded` | All required evidence clauses independently re-verified |
-| `Abstain` | Structural match found, but ≥1 clause is unresolvable from the fact model (by design — not a bug) |
+| `Abstain` | Structural match found, but ≥1 clause is unresolvable from the fact model |
 | `Ungrounded` | Evidence clause re-verification failed |
 
 ---
@@ -411,7 +381,7 @@ Eight patterns ship in `patterns/`, each exercised by the integration test suite
 | `spoofed_transfer_event` | SpoofedTransferEvent | High | SCWE-063 | — |
 | `oracle_manipulation` | OracleManipulation | High | SCWE-028 | — |
 
-> The `oracle_manipulation` pattern correctly **abstains** by design — its `role: PriceOracle` attribute is structurally unresolvable from call-graph traces alone. See [Exploit Corpus](#exploit-corpus--verified-outcomes) for details.
+> `oracle_manipulation` correctly **abstains** by design — its `role: PriceOracle` attribute is unresolvable from call-graph traces alone.
 
 ---
 
@@ -419,11 +389,11 @@ Eight patterns ship in `patterns/`, each exercised by the integration test suite
 
 `crates/converters` adapts real Ethereum tooling output into Root Cause's canonical schema. Converters are pure functions — no network I/O.
 
-### Geth `debug_traceTransaction` / `callTracer`
+### Geth / Erigon `debug_traceTransaction` callTracer
 
 ```sh
 cargo run -p converters --bin geth-convert -- \
-    --input  demo/samples/geth_calltracer_goerli.json \
+    --input    demo/samples/geth_calltracer_goerli.json \
     --tx-hash  0xc0ffcf21dc1881c3f20160b530d76f1d37af7b40552f7c59d3f339bad3023dad \
     --block    0x876123 \
     --chain-id 0x5 \
@@ -433,24 +403,20 @@ cargo run -p converters --bin geth-convert -- \
 cargo run -p cli -- analyze demo/converted/geth_goerli.json --patterns patterns/
 ```
 
-`demo/samples/geth_calltracer_goerli.json` is a **real** callTracer response (Goerli tx `0xc0ffcf...3dad`, geth v1.10.26) saved verbatim from a public go-ethereum issue report.
-
-### Erigon `debug_traceTransaction` / `callTracer`
-
-The same `geth-convert` binary handles Erigon output — Erigon's `callTracer` format is structurally identical to Geth's. Verified against a real Erigon Polygon trace in the integration test suite.
+The same binary handles both Geth and Erigon output — their `callTracer` formats are structurally identical. Verified against real traces from both clients in the integration test suite.
 
 ---
 
 ## Exploit Corpus & Verified Outcomes
 
-Every row in this table is backed by an integration test in `integration-tests/tests/exploit_corpus.rs` that runs the **real `rootcause` binary** and asserts on its actual output.
+Every row is backed by an integration test in `integration-tests/tests/exploit_corpus.rs` that runs the **real `rootcause` binary** and asserts on its actual output.
 
 | Trace | Pattern | Outcome |
 |-------|---------|---------|
 | `demo/dao.json` | `classic_reentrancy` | ✅ `GROUNDED` — Critical, SWC-107/SCWE-046 |
 | `demo/cross_function_reentrancy.json` | `classic_reentrancy` | ✅ `GROUNDED` — Critical |
 | `demo/reentrancy_safe.json` | `classic_reentrancy` | ✅ `0 matches` — no false positive |
-| `demo/oracle_manipulation.json` | `oracle_manipulation` | ✅ `ABSTAIN` — by design (unresolvable role) |
+| `demo/oracle_manipulation.json` | `oracle_manipulation` | ✅ `ABSTAIN` — by design |
 | `demo/unchecked_call.json` | `unchecked_external_call` | ✅ `GROUNDED` — High, SWC-104/SCWE-048 |
 | `demo/checked_call_reverts.json` | `unchecked_external_call` | ✅ `0 matches` — no false positive |
 | `demo/delegatecall_storage_collision.json` | `delegatecall_storage_collision` | ✅ `GROUNDED` — Critical, SWC-112/SCWE-150 |
@@ -469,7 +435,7 @@ Every row in this table is backed by an integration test in `integration-tests/t
 
 ## CI Pipeline
 
-Every push and pull request to `main` runs six jobs:
+Every push to `main` runs six jobs:
 
 ```mermaid
 flowchart LR
@@ -501,14 +467,14 @@ flowchart LR
 | `test` | `cargo build --workspace && cargo test --workspace` | Yes |
 | `doc` | `cargo doc --workspace --no-deps` (`RUSTDOCFLAGS=-D warnings`) | Yes |
 | `deny` | `cargo deny check` | Yes |
-| `coverage` | `cargo llvm-cov` → `lcov.info` artifact | No (`continue-on-error: true`) |
+| `coverage` | `cargo llvm-cov` → `lcov.info` artifact | No (`continue-on-error`) |
 
 ---
 
 ## Docker
 
 ```sh
-# Build the image
+# Build
 docker build -t rootcause .
 
 # Analyze a trace (mount your trace as /data)
@@ -516,11 +482,11 @@ docker run --rm \
     -v "$(pwd)/demo:/data:ro" \
     rootcause analyze /data/dao.json --patterns /patterns
 
-# Docker Compose example
+# Docker Compose
 docker compose run rootcause analyze /data/dao.json --patterns /patterns
 ```
 
-The image bundles the pattern library at `/patterns`. Mount your own pattern directory as an additional volume to use custom patterns. Published images are available at `ghcr.io/t0k1t00/rootcause:<tag>` — `:latest` tracks the most recent `v*` tag.
+The image bundles the pattern library at `/patterns`. Mount a custom pattern directory as an additional volume to use your own patterns.
 
 ---
 
@@ -528,26 +494,9 @@ The image bundles the pattern library at `/patterns`. Mount your own pattern dir
 
 | Symptom | Likely cause | Fix |
 |---------|-------------|-----|
-| `error: failed to load trace input` | Wrong trace path or wrong working directory | `analyze`'s first positional arg is always the trace file |
-| `error: failed to read ... --patterns` | `--patterns` needs one `.rcdsl` file or a directory of them (not nested) | Check path; directory must contain `.rcdsl` files directly |
-| `benchmark` reports `0 cases run` | Directory mode is non-recursive | Place `.json` case files directly in the suite dir, not in subdirs |
-| Pattern shows `0 candidate match(es)` when match expected | Missing evidence data in trace (e.g. `callTracer` with no storage/log) | Run `rootcause analyze ... --verbose` for per-stage diagnostics |
-| Finding shows `[ABSTAIN]` | Evidence clause unresolvable — this is correct, not an error | See the pattern's own doc comment in `patterns/*.rcdsl` |
-| Docker build fails fetching dependencies | `docker build` needs network for `cargo build` | This is expected; the runtime binary makes no network calls |
-
----
-
-## Contributing
-
-1. **Bug reports** — Use `.github/ISSUE_TEMPLATE/bug_report.md`. Always include `rootcause version` output (not just `--version`).
-2. **New patterns** — Follow `docs/PATTERN_AUTHORING_GUIDE.md`. Use the pattern SDK (`new-pattern`, `validate-pattern`, `format-pattern`, `doctor`).
-3. **Engine changes** — Read `docs/spec/01_ARCHITECTURE.md` and the relevant `docs/adr/` records before proposing structural changes.
-4. **Security issues** — See `SECURITY.md` for the private disclosure policy.
-
-All contributions must pass the CI pipeline (`fmt`, `clippy`, `test`, `doc`, `deny`) before merge. See `CONTRIBUTING.md` for the full setup guide.
-
----
-
-## License
-
-Licensed under the Apache License, Version 2.0. See [LICENSE](LICENSE) for details.
+| `error: failed to load trace input` | Wrong trace path or working directory | First positional argument is always the trace file |
+| `error: failed to read ... --patterns` | `--patterns` needs a `.rcdsl` file or directory of them (not nested) | Check path |
+| `benchmark` reports `0 cases run` against a directory | Directory mode is non-recursive | Place `.json` case files directly in the suite dir |
+| Pattern shows `0 candidate match(es)` unexpectedly | Missing evidence data in trace (e.g. `callTracer` with no storage/log) | Run `rootcause analyze ... --verbose` for per-stage diagnostics |
+| Finding shows `[ABSTAIN]` | Evidence clause structurally unresolvable — correct behaviour, not an error | See pattern's doc comment in `patterns/*.rcdsl` |
+| Docker build fails fetching dependencies | `docker build` needs network for `cargo build` | Expected — the `rootcause` runtime binary makes no network calls |
