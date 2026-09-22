@@ -1,4 +1,4 @@
-# Root Cause
+# RootCause
 
 > Deterministic, evidence-grounded EVM exploit pattern detection — no ML, no confidence scores, no guessing.
 
