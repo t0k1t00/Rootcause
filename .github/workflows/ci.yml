@@ -60,7 +60,12 @@ jobs:
         - name: Install pinned toolchain
           run: rustup show
         - uses: taiki-e/install-action@cargo-llvm-cov
-        - run: cargo llvm-cov --workspace --all-targets --lcov --output-path lcov.info
+        - name: Collect coverage and generate report
+          run: |
+            eval "$(cargo llvm-cov show-env --export-prefix)"
+            cargo build --workspace
+            cargo test --workspace
+            cargo llvm-cov report --lcov --output-path lcov.info
         - uses: actions/upload-artifact@v4
           with:
             name: coverage-report
